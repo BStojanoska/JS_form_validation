@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+  <title>Homework</title>
+
+  <style>
+    .hide {
+      opacity: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container py-5">
+    <div class="row">
+      <form class="col-6 mx-auto" id="userForm">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" class="form-control" id="name" name="name" />
+          <small class="text-danger hide">Name <span>must not be empty</span>!</small>
+        </div>
+        <div class="form-group">
+          <label for="lastname">Lastname</label>
+          <input type="test" class="form-control" id="lastname" name="lastname" />
+          <small class="text-danger hide">Lastname <span>must not be empty</span>!</small>
+        </div>
+        <div class="form-group">
+          <label for="age">Age group</label>
+          <select class="form-control" id="age" name="age">
+            <option value="0">Select age...</option>
+            <option value="1">
+              < 18</option> <option value="2">19 - 25
+            </option>
+            <option value="3">26 <</option> </select> <small class="text-danger hide"><span>You must select an
+                  age!</span></small>
+        </div>
+        <div class="form-group">
+          <label for="city">City</label>
+          <input type="text" class="form-control" id="city" name="cities[]" />
+          <small class="text-danger hide cityErrorTag">City <span>must not be empty</span>!</small>
+          <div class="clearfix"></div>
+          <button class="my-3 p-1 px-3 btn btn-info addCityBtn">+</button>
+        </div>
+        <button type="submit" class="btn btn-secondary" disabled>Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ----------------- Scenario Two -----------------
+    const form = document.querySelector("#userForm");
+    const cityBtn = document.querySelector(".addCityBtn");
+    const select = document.querySelector("select");
+    const formInputs = form.querySelectorAll("input, select");
+    const submitBtn = document.querySelector('button[type="submit"]');
+    let age = 0;
+    // I have an object that I will use to check if the field is validated or not. Dinamically created city input fields will be pushed in the object as needed
+    let fields = {
+      name: false,
+      lastname: false,
+      age: false,
+      city: false
+    }
+
+    /*             FUNCTIONS                 */
+
+    // make input field red again (in TRUMP VOICE ^.^)
+    const invalidateField = (input) => {
+      let smallTag = input.nextElementSibling;
+
+      smallTag.classList.remove('text-success');
+      smallTag.classList.add('text-danger');
+      smallTag.classList.remove("hide");
+      fields[input.getAttribute('id')] = false;
+    }
+
+    // validation of one field
+    const validateField = input => {
+      let val = input.value.trim();
+      let smallTag = input.nextElementSibling;
+      let span = smallTag.querySelector("span");
+
+      // if the input field is shorter than required, than switch the span text with the one set below, else just return the standard error message
+      if (input.getAttribute("name") == "lastname" && val.length > 0 && val.length < 3) {
+        span.innerText = " must have at least 3 characters";
+        invalidateField(input);
+      } else if (input.getAttribute("name") != "age" && val.length == 1) {
+        span.innerText = " must have at least 2 characters";
+        invalidateField(input);
+      } else if (val == "" || val == "0") {
+        span.innerText = " You must select an age group";
+        invalidateField(input);
+      } else {
+        smallTag.classList.remove('text-danger');
+        smallTag.classList.add('text-success');
+        span.innerText = " is okay fam";
+        smallTag.classList.remove("hide");
+        fields[input.getAttribute('id')] = true;
+      }
+
+      checkIfFieldsValidated();
+    };
+
+    const checkIfFieldsValidated = () => {
+      // I get the form input here in case we have added more city input fields, so I can always have the exact length and trigger all error messages
+      const formInputs = form.querySelectorAll("input, select");
+
+      let counter = 0;
+      Object.keys(fields).forEach(key => {
+        if (fields[key] == true) counter++;
+      });
+
+      if (counter == formInputs.length) {
+        submitBtn.classList.remove('btn-secondary');
+        submitBtn.classList.add('btn-primary');
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.classList.remove('btn-primary');
+        submitBtn.classList.add('btn-secondary');
+        submitBtn.disabled = true;
+      }
+    }
+
+    /*             EVENT LISTENERS                 */
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      alert('You have successfully submitted the form');
+    })
+    // Form inputs event listener
+    formInputs.forEach(input => {
+      input.addEventListener("keyup", e => {
+        validateField(input);
+      });
+    });
+
+    select.addEventListener('change', e => {
+      validateField(select);
+    })
+
+    // Cities event listener
+    cityBtn.addEventListener("click", e => {
+      e.preventDefault();
+
+      // create element and populate it with attributes, classes...
+      let newInput = document.createElement("input");
+      newInput.classList.add("form-control");
+      newInput.classList.add("my-1");
+      newInput.setAttribute("name", "cities[]");
+      newInput.setAttribute("type", "text");
+      // I create unique id's for the input field using a timestamp, and pushing that id into the fields object, that I can easily access later if I need to change it's value to true or false
+      newInput.setAttribute("id", Date.now());
+      // after creating the input field, we have to attach an event listener (because it is dynamically created (created after the initial binding of the event listeners), it doesn't have an event listener)
+      newInput.addEventListener('keyup', e => {
+        validateField(newInput);
+      })
+
+      // get the parent node, which is the form-control element, and insert the new element before the + button
+      cityBtn.parentNode.insertBefore(newInput, document.querySelector('.clearfix'));
+
+      // clone error message and insert it after the input field so we can trigger when needed
+      let errorTag = document.querySelector('.cityErrorTag').cloneNode(true);
+      // make sure the error tag is hidden at first, in case the form was submitted and the error tags was shown for the previous field
+      errorTag.classList.add('hide');
+      cityBtn.parentNode.insertBefore(errorTag, document.querySelector('.clearfix'));
+
+      checkIfFieldsValidated();
+    });
+
+    // Prompt for age
+    select.addEventListener("change", e => {
+      // start only when selecting a valid option
+      if (select.options[select.selectedIndex].value != 0) {
+        age = prompt("Specify your age pretty please ^.^");
+      }
+    });
+  </script>
+</body>
+
+</html>
